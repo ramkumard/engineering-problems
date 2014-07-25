@@ -3,32 +3,32 @@ class Event
 	RANDOM_EVENT_VALUE={:one =>1,:two=>2,:three=>3,:four=>4,:five=>5,:six=>6,:no_ball=>1,:wide=>1,:out=>0}
 	def self.random_event
 		RANDOM_EVENT[rand(0..8)]
-	end	
+	end
 
-	 RANDOM_EVENT.each do |method_name|
-        define_method method_name do |*arg|
-        case method_name
-        when :one,:two,:three,:four,:five,:six
-          arg.first.score=arg.first.score+RANDOM_EVENT_VALUE[method_name]
-          team=Team.find_by_team_name(arg.first.team)
-          team.score=team.score+RANDOM_EVENT_VALUE[method_name]
-        when :no_ball,:wide
-          team=Team.find_by_team_name(arg.first.team)
-          team.score=team.score+RANDOM_EVENT_VALUE[method_name]
-        when :out
-          arg.first.status="out"
-        end
-        end
-     end
+  RANDOM_EVENT.each do |method_name|
+    define_method method_name do |*arg|
+      case method_name
+      when :one,:two,:three,:four,:five,:six
+        arg.first.score=arg.first.score+RANDOM_EVENT_VALUE[method_name]
+        team=Team.find_by_team_name(arg.first.team)
+        team.score=team.score+RANDOM_EVENT_VALUE[method_name]
+      when :no_ball,:wide
+        team=Team.find_by_team_name(arg.first.team)
+        team.score=team.score+RANDOM_EVENT_VALUE[method_name]
+      when :out
+        arg.first.status="out"
+      end
+    end
+  end
 
-end	
+end
 
 class Ball
 	def initialize(index,over)
 		@over = over
 		@index = index
 		@event = nil
-	end	
+	end
 
 	def over
 		@over
@@ -36,20 +36,20 @@ class Ball
 	def index
 		@index
 	end
-end	
+end
 
 class Over
 	def initialize(over)
 		@index = over
 		@balls = (1..6).map{ |index| Ball.new(index,over)}
-	end	
+	end
 	def balls
 		@balls
-	end	
+	end
 end
 
 class Player
-attr_accessor :status,:score
+  attr_accessor :status,:score
   def initialize(index,team)
   	@index = index
     @team = team
@@ -57,14 +57,14 @@ attr_accessor :status,:score
     @score=0
   end
 
- def score
- 	@score
- end
+  def score
+    @score
+  end
 
- def team
- 	@team
- end
-end	
+  def team
+    @team
+  end
+end
 
 class Team
 	attr_accessor :status,:players,:score,:team_name
@@ -78,20 +78,20 @@ class Team
 
 	def team_name
 		@team_name
-	end	
+	end
 
-class << self
-	[:status,:players,:score,:team_name].each do |method_name|
-        define_method "find_by_#{method_name}" do |arg|
-        	objects=ObjectSpace.each_object(self).to_a
-        	objects.find {|team| team.send(method_name) == arg}
-         end
+  class << self
+    [:status,:players,:score,:team_name].each do |method_name|
+      define_method "find_by_#{method_name}" do |arg|
+        objects=ObjectSpace.each_object(self).to_a
+        objects.find {|team| team.send(method_name) == arg}
+      end
     end
- end
+  end
 
 	#def self.find_by_name(name)
-		#data=ObjectSpace.each_object(self).to_a
-		#puts data.find {|team| team.team_name == name}
+  #data=ObjectSpace.each_object(self).to_a
+  #puts data.find {|team| team.team_name == name}
 	#end
 
 	def players
@@ -101,8 +101,8 @@ class << self
 	def update_team_status(status)
 		self.status=status
 	end
-	
-end		
+
+end
 
 class Match
 	def initialize(team1, team2)
@@ -115,14 +115,14 @@ class Match
 
 	def teams
 		teams = [@team_a,@team_b]
-	end	
+	end
 
 	def fetch_player(team)
 		team.players.find {|play| play.status==nil}
 	end
 
 	def fetch_bowler(team)
-	    team.players.sample
+    team.players.sample
 	end
 
 	def toss
@@ -131,29 +131,29 @@ class Match
 		winner = coin == 0 ? @team_a : @team_b
 		puts "Toss won by team #{winner.team_name}"
 		winner
-	end	
+	end
 
 
 	def start(batting,bowling)
 		match_summary=[]
 		@batting=batting
 		@bowling=bowling
-	    @overs = (1..5).map{ |index| Over.new(index)}
-        @overs.each do |over|
-        blowing_player=fetch_bowler(@bowling).inspect
-        runs=Hash.new()
-        runs['over']=Hash.new()
-        over.balls.each do |y|
-            batting_player=fetch_player(@batting)
-          	event=Event.new
-          	event_name=Event.random_event
-          	runs['over']["#{y.over}.#{y.index}"]=event_name
-          	event.send(event_name,batting_player)
-		end 
-		match_summary << runs
-	    end
-        
-	    return @batting,match_summary
+    @overs = (1..5).map{ |index| Over.new(index)}
+    @overs.each do |over|
+      blowing_player=fetch_bowler(@bowling).inspect
+      runs=Hash.new()
+      runs['over']=Hash.new()
+      over.balls.each do |y|
+        batting_player=fetch_player(@batting)
+        event=Event.new
+        event_name=Event.random_event
+        runs['over']["#{y.over}.#{y.index}"]=event_name
+        event.send(event_name,batting_player)
+      end
+      match_summary << runs
+    end
+
+    return @batting,match_summary
 	end
 
 	def batting_play
@@ -162,7 +162,7 @@ class Match
 			@bowling= p  if p.status!="Batting"
 		end
 		self.start(@batting,@bowling)
-	end	
+	end
 
 	def chasing_play
 		self.teams.each do |p|
@@ -170,16 +170,16 @@ class Match
 			@bowling= p  if p.status=="Batting"
 		end
 		self.start(@batting,@bowling)
-	end	
-	
-end		
+	end
+
+end
 
 
 match = Match.new("A","B")
-winning_team = match.toss 
+winning_team = match.toss
 losing_team = match.teams.find{ |team| team.team_name != winning_team.team_name}
 print "Batting or Bowling ? 0 for batting, 1 for bowling :  "
-winner_input = gets.chomp.to_i 
+winner_input = gets.chomp.to_i
 score = winner_input == 0 ? winning_team.update_team_status("Batting") : losing_team.update_team_status("Batting")
 @score_a=match.batting_play[0].score
 @score_b=match.chasing_play[0].score
